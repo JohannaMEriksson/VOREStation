@@ -64,6 +64,9 @@
 	var/sleeper_state = 0 // 0 for empty, 1 for normal, 2 for mediborg-healthy
 	var/scrubbing = FALSE //Floor cleaning enabled
 
+	// Subtype limited modules or admin restrictions
+	var/list/restrict_modules_to = list()
+
 	// Components are basically robot organs.
 	var/list/components = list()
 
@@ -106,12 +109,24 @@
 		/mob/living/silicon/robot/proc/sensor_mode,
 		/mob/living/silicon/robot/proc/robot_checklaws,
 		/mob/living/silicon/robot/proc/robot_mount,
+		/mob/living/silicon/robot/proc/take_image,
+		/mob/living/silicon/robot/proc/view_images,
+		/mob/living/silicon/robot/proc/delete_images,
 		/mob/living/proc/toggle_rider_reins,
 		/mob/living/proc/vertical_nom,
 		/mob/living/proc/shred_limb,
 		/mob/living/proc/dominate_prey,
 		/mob/living/proc/lend_prey_control
 	)
+
+	var/has_recoloured = FALSE
+	var/vtec_active = FALSE
+
+	// Riding Stuff
+	max_buckled_mobs = 1 //Yeehaw
+	can_buckle = TRUE
+	buckle_movable = TRUE
+	buckle_lying = FALSE
 
 /mob/living/silicon/robot/New(loc, var/unfinished = 0)
 	spark_system = new /datum/effect/effect/system/spark_spread()
@@ -173,6 +188,9 @@
 	hud_list[IMPCHEM_HUD]		= gen_hud_image('icons/mob/hud.dmi', src, "hudblank", plane = PLANE_CH_IMPCHEM)
 	hud_list[IMPTRACK_HUD]		= gen_hud_image('icons/mob/hud.dmi', src, "hudblank", plane = PLANE_CH_IMPTRACK)
 	hud_list[SPECIALROLE_HUD]	= gen_hud_image('icons/mob/hud.dmi', src, "hudblank", plane = PLANE_CH_SPECIAL)
+
+	riding_datum = new /datum/riding/dogborg(src)
+
 
 /mob/living/silicon/robot/LateInitialize()
 	. = ..()
@@ -318,15 +336,21 @@
 	var/list/modules = list()
 	//VOREStatation Edit Start: shell restrictions
 	if(shell)
-		modules.Add(shell_module_types)
+		if(restrict_modules_to.len > 0)
+			modules.Add(restrict_modules_to)
+		else
+			modules.Add(shell_module_types)
 	else
-		modules.Add(robot_module_types)
-		if(crisis || security_level == SEC_LEVEL_RED || crisis_override)
-			to_chat(src, span_red("Crisis mode active. Combat module available."))
-			modules |= emergency_module_types
-		for(var/module_name in whitelisted_module_types)
-			if(is_borg_whitelisted(src, module_name))
-				modules |= module_name
+		if(restrict_modules_to.len > 0)
+			modules.Add(restrict_modules_to)
+		else
+			modules.Add(robot_module_types)
+			if(crisis || security_level == SEC_LEVEL_RED || crisis_override)
+				to_chat(src, span_red("Crisis mode active. Combat module available."))
+				modules |= emergency_module_types
+			for(var/module_name in whitelisted_module_types)
+				if(is_borg_whitelisted(src, module_name))
+					modules |= module_name
 	//VOREStatation Edit End: shell restrictions
 	modtype = tgui_input_list(usr, "Please, select a module!", "Robot module", modules)
 
@@ -403,7 +427,7 @@
 	set category = "Robot Commands"
 
 	if(custom_name)
-		to_chat(usr, "You can't pick another custom name. Go ask for a name change.")
+		to_chat(usr, "You can't pick another custom name. [isshell(src) ? "" : "Go ask for a name change."]")
 		return 0
 
 	spawn(0)
@@ -520,12 +544,9 @@
 /mob/living/silicon/robot/proc/toggle_vtec()
 	set name = "Toggle VTEC"
 	set category = "Abilities"
-	if(speed == -1)
-		to_chat(src, "<span class='filter_notice'>VTEC module disabled.</span>")
-		speed = 0
-	else
-		to_chat(src, "<span class='filter_notice'>VTEC module enabled.</span>")
-		speed = -1
+	vtec_active = !vtec_active
+	hud_used.toggle_vtec_control()
+	to_chat(src, "<span class='filter_notice'>VTEC module [vtec_active  ? "enabled" : "disabled"].</span>")
 
 // update the status screen display
 /mob/living/silicon/robot/Stat()
@@ -815,76 +836,96 @@
 	if(notify)
 		notify_ai(ROBOT_NOTIFICATION_MODULE_RESET, module.name)
 	module.Reset(src)
-	module.Destroy()
+	qdel(module)
 	module = null
 	updatename("Default")
+	has_recoloured = FALSE
+
+/mob/living/silicon/robot/proc/ColorMate()
+	set name = "Recolour Module"
+	set category = "Robot Commands"
+	set desc = "Allows to recolour once."
+
+	if(!has_recoloured)
+		var/datum/ColorMate/recolour = new /datum/ColorMate(usr)
+		recolour.tgui_interact(usr)
+		return
+	to_chat(usr, "You've already recoloured yourself once. Ask for a module reset for another.")
 
 /mob/living/silicon/robot/attack_hand(mob/user)
+	if(LAZYLEN(buckled_mobs))
+		//We're getting off!
+		if(user in buckled_mobs)
+			riding_datum.force_dismount(user)
+		//We're kicking everyone off!
+		if(user == src)
+			for(var/rider in buckled_mobs)
+				riding_datum.force_dismount(rider)
+	else
+		add_fingerprint(user)
 
-	add_fingerprint(user)
+		if(opened && !wiresexposed && (!istype(user, /mob/living/silicon)))
+			var/datum/robot_component/cell_component = components["power cell"]
+			if(cell)
+				cell.update_icon()
+				cell.add_fingerprint(user)
+				user.put_in_active_hand(cell)
+				to_chat(user, "<span class='filter_notice'>You remove \the [cell].</span>")
+				cell = null
+				cell_component.wrapped = null
+				cell_component.installed = 0
+				update_icon()
+			else if(cell_component.installed == -1)
+				cell_component.installed = 0
+				var/obj/item/broken_device = cell_component.wrapped
+				to_chat(user, "<span class='filter_notice'>You remove \the [broken_device].</span>")
+				user.put_in_active_hand(broken_device)
 
-	if(opened && !wiresexposed && (!istype(user, /mob/living/silicon)))
-		var/datum/robot_component/cell_component = components["power cell"]
-		if(cell)
-			cell.update_icon()
-			cell.add_fingerprint(user)
-			user.put_in_active_hand(cell)
-			to_chat(user, "<span class='filter_notice'>You remove \the [cell].</span>")
-			cell = null
-			cell_component.wrapped = null
-			cell_component.installed = 0
-			update_icon()
-		else if(cell_component.installed == -1)
-			cell_component.installed = 0
-			var/obj/item/broken_device = cell_component.wrapped
-			to_chat(user, "<span class='filter_notice'>You remove \the [broken_device].</span>")
-			user.put_in_active_hand(broken_device)
-
-	if(istype(user,/mob/living/carbon/human) && !opened)
-		var/mob/living/carbon/human/H = user
-		//Adding borg petting. Help intent pets if preferences allow, Disarm intent taps and Harm is punching(no damage)
-		switch(H.a_intent)
-			if(I_HELP)
-				if(client && !client.prefs.borg_petting)
-					visible_message("<span class='notice'>[H] reaches out for [src], but quickly refrains from petting.</span>")
+		if(istype(user,/mob/living/carbon/human) && !opened)
+			var/mob/living/carbon/human/H = user
+			//Adding borg petting. Help intent pets if preferences allow, Disarm intent taps and Harm is punching(no damage)
+			switch(H.a_intent)
+				if(I_HELP)
+					if(client && !client.prefs.borg_petting)
+						visible_message("<span class='notice'>[H] reaches out for [src], but quickly refrains from petting.</span>")
+						return
+					else
+						visible_message("<span class='notice'>[H] pets [src].</span>")
+						return
+				if(I_HURT)
+					H.do_attack_animation(src)
+					if(H.species.can_shred(H))
+						attack_generic(H, rand(30,50), "slashed")
+						return
+					else
+						playsound(src.loc, 'sound/effects/bang.ogg', 10, 1)
+						visible_message("<span class='warning'>[H] punches [src], but doesn't leave a dent.</span>")
+						return
+				if(I_DISARM)
+					H.do_attack_animation(src)
+					playsound(src.loc, 'sound/effects/clang2.ogg', 10, 1)
+					visible_message("<span class='warning'>[H] taps [src].</span>")
 					return
-				else
-					visible_message("<span class='notice'>[H] pets [src].</span>")
-					return
-			if(I_HURT)
-				H.do_attack_animation(src)
-				if(H.species.can_shred(H))
-					attack_generic(H, rand(30,50), "slashed")
-					return
-				else
-					playsound(src.loc, 'sound/effects/bang.ogg', 10, 1)
-					visible_message("<span class='warning'>[H] punches [src], but doesn't leave a dent.</span>")
-					return
-			if(I_DISARM)
-				H.do_attack_animation(src)
-				playsound(src.loc, 'sound/effects/clang2.ogg', 10, 1)
-				visible_message("<span class='warning'>[H] taps [src].</span>")
-				return
-			if(I_GRAB)
-				if(is_vore_predator(H) && H.devourable && src.feeding && src.devourable)
-					var/switchy = tgui_alert(H, "Do you wish to eat [src] or feed yourself to them?", "Feed or Eat",list("Nevermind!", "Eat","Feed"))
-					switch(switchy)
-						if("Nevermind!")
-							return
-						if("Eat")
+				if(I_GRAB)
+					if(is_vore_predator(H) && H.devourable && src.feeding && src.devourable)
+						var/switchy = tgui_alert(H, "Do you wish to eat [src] or feed yourself to them?", "Feed or Eat",list("Nevermind!", "Eat","Feed"))
+						switch(switchy)
+							if("Nevermind!")
+								return
+							if("Eat")
+								feed_grabbed_to_self(H, src)
+								return
+							if("Feed")
+								H.feed_self_to_grabbed(H, src)
+								return
+					if(is_vore_predator(H) && src.devourable)
+						if(tgui_alert(H, "Do you wish to eat [src]?", "Eat?",list("Nevermind!", "Yes!")) == "Yes!")
 							feed_grabbed_to_self(H, src)
 							return
-						if("Feed")
+					if(H.devourable && src.feeding)
+						if(tgui_alert(H, "Do you wish to feed yourself to [src]?", "Feed?",list("Nevermind!", "Yes!")) == "Yes!")
 							H.feed_self_to_grabbed(H, src)
 							return
-				if(is_vore_predator(H) && src.devourable)
-					if(tgui_alert(H, "Do you wish to eat [src]?", "Eat?",list("Nevermind!", "Yes!")) == "Yes!")
-						feed_grabbed_to_self(H, src)
-						return
-				if(H.devourable && src.feeding)
-					if(tgui_alert(H, "Do you wish to feed yourself to [src]?", "Feed?",list("Nevermind!", "Yes!")) == "Yes!")
-						H.feed_self_to_grabbed(H, src)
-						return
 
 //Robots take half damage from basic attacks.
 /mob/living/silicon/robot/attack_generic(var/mob/user, var/damage, var/attack_message)
@@ -1233,6 +1274,8 @@
 	icon_selected = 1
 	icon_selection_tries = 0
 	sprite_type = robot_species
+	if(hands)
+		update_hud()
 	to_chat(src, "<span class='filter_notice'>Your icon has been set. You now require a module reset to change it.</span>")
 
 /mob/living/silicon/robot/proc/set_default_module_icon()
@@ -1250,13 +1293,20 @@
 	to_chat(usr, "You [sensor_type ? "enable" : "disable"] your sensors.") //VOREStation Add
 	toggle_sensor_mode()
 
+/mob/living/silicon/robot/proc/repick_laws()
+	return
+
 /mob/living/silicon/robot/proc/add_robot_verbs()
 	src.verbs |= robot_verbs_default
 	src.verbs |= silicon_subsystems
+	if(config.allow_robot_recolor)
+		src.verbs |= /mob/living/silicon/robot/proc/ColorMate
 
 /mob/living/silicon/robot/proc/remove_robot_verbs()
 	src.verbs -= robot_verbs_default
 	src.verbs -= silicon_subsystems
+	if(config.allow_robot_recolor)
+		src.verbs |= /mob/living/silicon/robot/proc/ColorMate
 
 // Uses power from cyborg's cell. Returns 1 on success or 0 on failure.
 // Properly converts using CELLRATE now! Amount is in Joules.
@@ -1274,6 +1324,20 @@
 		used_power_this_tick += power_use
 		return 1
 	return 0
+
+// Function to directly drain power from the robot's cell, allows to set a minimum level beneath which
+// abilities can no longer be used
+/mob/living/silicon/robot/proc/use_direct_power(var/amount = 0, var/lower_limit = 0)
+	// No cell inserted
+	if(!cell)
+		return FALSE
+
+	// Power cell does not have sufficient charge to remain above the power limit.
+	if(cell.charge - (amount + lower_limit) <= 0)
+		return FALSE
+
+	cell.charge -= amount
+	return TRUE
 
 /mob/living/silicon/robot/binarycheck()
 	if(get_restraining_bolt())
@@ -1415,7 +1479,7 @@
 		G.drop_item_nm()
 
 /mob/living/silicon/robot/disable_spoiler_vision()
-	if(sight_mode & (BORGMESON|BORGMATERIAL|BORGXRAY)) // Whyyyyyyyy have seperate defines.
+	if(sight_mode & (BORGMESON|BORGMATERIAL|BORGXRAY|BORGANOMALOUS)) // Whyyyyyyyy have seperate defines.
 		var/i = 0
 		// Borg inventory code is very . . interesting and as such, unequiping a specific item requires jumping through some (for) loops.
 		var/current_selection_index = get_selected_module() // Will be 0 if nothing is selected.
@@ -1423,7 +1487,7 @@
 			i++
 			if(istype(thing, /obj/item/borg/sight))
 				var/obj/item/borg/sight/S = thing
-				if(S.sight_mode & (BORGMESON|BORGMATERIAL|BORGXRAY))
+				if(S.sight_mode & (BORGMESON|BORGMATERIAL|BORGXRAY|BORGANOMALOUS))
 					select_module(i)
 					uneq_active()
 
@@ -1455,6 +1519,103 @@
 	rest_style = tgui_alert(src, "Select resting pose", "Resting Pose", sprite_datum.rest_sprite_options)
 	if(!rest_style)
 		rest_style = "Default"
+
+/mob/living/silicon/robot/verb/robot_nom(var/mob/living/T in living_mobs(1))
+	set name = "Robot Nom"
+	set category = "IC"
+	set desc = "Allows you to eat someone."
+
+	if (stat != CONSCIOUS)
+		return
+	return feed_grabbed_to_self(src,T)
+
+//RIDING
+/datum/riding/dogborg
+	keytype = /obj/item/weapon/material/twohanded/riding_crop // Crack!
+	nonhuman_key_exemption = FALSE	// If true, nonhumans who can't hold keys don't need them, like borgs and simplemobs.
+	key_name = "a riding crop"		// What the 'keys' for the thing being rided on would be called.
+	only_one_driver = TRUE			// If true, only the person in 'front' (first on list of riding mobs) can drive.
+
+/datum/riding/dogborg/handle_vehicle_layer()
+	ridden.layer = initial(ridden.layer)
+
+/datum/riding/dogborg/ride_check(mob/living/M)
+	var/mob/living/L = ridden
+	if(L.stat)
+		force_dismount(M)
+		return FALSE
+	return TRUE
+
+/datum/riding/dogborg/force_dismount(mob/M)
+	. =..()
+	ridden.visible_message("<span class='notice'>[M] stops riding [ridden]!</span>")
+
+//Hoooo boy.
+/datum/riding/dogborg/get_offsets(pass_index) // list(dir = x, y, layer)
+	var/mob/living/L = ridden
+	var/scale = L.size_multiplier
+	var/scale_difference = (L.size_multiplier - rider_size) * 10
+
+	var/list/values = list(
+		"[NORTH]" = list(0, 10*scale + scale_difference, ABOVE_MOB_LAYER),
+		"[SOUTH]" = list(0, 10*scale + scale_difference, BELOW_MOB_LAYER),
+		"[EAST]" = list(-5*scale, 10*scale + scale_difference, ABOVE_MOB_LAYER),
+		"[WEST]" = list(5*scale, 10*scale + scale_difference, ABOVE_MOB_LAYER))
+
+	return values
+
+/mob/living/silicon/robot/buckle_mob(mob/living/M, forced = FALSE, check_loc = TRUE)
+	if(forced)
+		return ..() // Skip our checks
+	if(lying)
+		return FALSE
+	if(!ishuman(M))
+		return FALSE
+	if(M in buckled_mobs)
+		return FALSE
+	if(M.size_multiplier > size_multiplier * 1.2)
+		to_chat(src, "<span class='warning'>This isn't a pony show! You need to be bigger for them to ride.</span>")
+		return FALSE
+
+	var/mob/living/carbon/human/H = M
+
+	if(istaurtail(H.tail_style))
+		to_chat(src, "<span class='warning'>Too many legs. TOO MANY LEGS!!</span>")
+		return FALSE
+	if(M.loc != src.loc)
+		if(M.Adjacent(src))
+			M.forceMove(get_turf(src))
+
+	. = ..()
+	if(.)
+		riding_datum.rider_size = M.size_multiplier
+		buckled_mobs[M] = "riding"
+
+/mob/living/silicon/robot/MouseDrop_T(mob/living/M, mob/living/user) //Prevention for forced relocation caused by can_buckle. Base proc has no other use.
+	return
+
+/mob/living/silicon/robot/proc/robot_mount(var/mob/living/M in living_mobs(1))
+	set name = "Robot Mount/Dismount"
+	set category = "Abilities"
+	set desc = "Let people ride on you."
+
+	if(LAZYLEN(buckled_mobs))
+		for(var/rider in buckled_mobs)
+			riding_datum.force_dismount(rider)
+		return
+	if (stat != CONSCIOUS)
+		return
+	if(!can_buckle || !istype(M) || !M.Adjacent(src) || M.buckled)
+		return
+	if(buckle_mob(M))
+		visible_message("<span class='notice'>[M] starts riding [name]!</span>")
+
+/mob/living/silicon/robot/onTransitZ(old_z, new_z)
+	if(shell)
+		if(deployed && using_map.ai_shell_restricted && !(new_z in using_map.ai_shell_allowed_levels))
+			to_chat(src, "<span class='warning'>Your connection with the shell is suddenly interrupted!</span>")
+			undeploy()
+	..()
 
 // Those basic ones require quite detailled checks on the robot's vars to see if they are installed!
 /mob/living/silicon/robot/proc/has_basic_upgrade(var/given_type)
@@ -1529,7 +1690,19 @@
 /mob/living/silicon/robot/proc/has_no_prod_upgrade(var/given_type)
 	if(given_type == /obj/item/borg/upgrade/no_prod/toygun)
 		return has_upgrade_module(/obj/item/weapon/gun/projectile/cyborgtoy)
+	if(given_type == /obj/item/borg/upgrade/no_prod/vision_xray)
+		return has_upgrade_module(/obj/item/borg/sight/xray)
+	if(given_type == /obj/item/borg/upgrade/no_prod/vision_thermal)
+		return has_upgrade_module(/obj/item/borg/sight/thermal)
+	if(given_type == /obj/item/borg/upgrade/no_prod/vision_meson)
+		return has_upgrade_module(/obj/item/borg/sight/meson)
+	if(given_type == /obj/item/borg/upgrade/no_prod/vision_material)
+		return has_upgrade_module(/obj/item/borg/sight/material)
+	if(given_type == /obj/item/borg/upgrade/no_prod/vision_anomalous)
+		return has_upgrade_module(/obj/item/borg/sight/anomalous)
 	return null
 
 /mob/living/silicon/robot/proc/has_upgrade(var/given_type)
 	return (has_basic_upgrade(given_type) || has_advanced_upgrade(given_type) || has_restricted_upgrade(given_type) || has_no_prod_upgrade(given_type))
+
+#undef CYBORG_POWER_USAGE_MULTIPLIER

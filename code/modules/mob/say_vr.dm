@@ -200,6 +200,8 @@
 		for(var/mob/M as anything in vis_mobs)
 			if(isnewplayer(M))
 				continue
+			if(src.client && M && !(get_z(src) == get_z(M)))
+				message = "<span class='multizsay'>[message]</span>"
 			if(isobserver(M) && (!M.is_preference_enabled(/datum/client_preference/ghost_see_whisubtle) || \
 			!is_preference_enabled(/datum/client_preference/whisubtle_vis) && !M.client?.holder))
 				spawn(0)
@@ -252,6 +254,7 @@
 	to_chat(user,message)
 	to_chat(user, "<span class='danger'>^ This message was NOT SENT ^ -- It was [length] characters, and the limit is [MAX_MESSAGE_LEN]. It would fit in [posts] separate messages.</span>")
 #undef MAX_HUGE_MESSAGE_LEN
+#undef POST_DELIMITER_STR
 
 ///// PSAY /////
 

@@ -1,25 +1,8 @@
-#define MECHA_INT_FIRE 1
-#define MECHA_INT_TEMP_CONTROL 2
-#define MECHA_INT_SHORT_CIRCUIT 4
-#define MECHA_INT_TANK_BREACH 8
-#define MECHA_INT_CONTROL_LOST 16
-
-#define MECHA_PROC_MOVEMENT 1
-#define MECHA_PROC_DAMAGE   2
-#define MECHA_PROC_INT_TEMP 4
-
-#define MELEE 1
-#define RANGED 2
-
 #define MECHA_OPERATING     0
 #define MECHA_BOLTS_SECURED 1
 #define MECHA_PANEL_LOOSE   2
 #define MECHA_CELL_OPEN     3
 #define MECHA_CELL_OUT      4
-
-#define MECH_FACTION_NT "nano"
-#define MECH_FACTION_SYNDI "syndi"
-#define MECH_FACTION_NONE "none"
 
 /obj/mecha
 	name = "Mecha"
@@ -538,7 +521,7 @@
 	if(equipment?.len)
 		. += "It's equipped with:"
 		for(var/obj/item/mecha_parts/mecha_equipment/ME in equipment)
-			. += "\icon[ME][bicon(ME)] [ME]"
+			. += "[icon2html(ME,user.client)] [ME]"
 
 /obj/mecha/proc/drop_item()//Derpfix, but may be useful in future for engineering exosuits.
 	return
@@ -2439,7 +2422,7 @@
 /obj/mecha/proc/occupant_message(message as text)
 	if(message)
 		if(src.occupant && src.occupant.client)
-			to_chat(src.occupant, "\icon[src][bicon(src)] [message]")
+			to_chat(src.occupant, "[icon2html(src, src.occupant.client)] [message]")
 	return
 
 /obj/mecha/proc/log_message(message as text,red=null)
@@ -2911,3 +2894,9 @@
 	playsound(src, 'sound/effects/attackblob.ogg', 50, 1)
 
 	return ..()
+
+#undef MECHA_OPERATING
+#undef MECHA_BOLTS_SECURED
+#undef MECHA_PANEL_LOOSE
+#undef MECHA_CELL_OPEN
+#undef MECHA_CELL_OUT

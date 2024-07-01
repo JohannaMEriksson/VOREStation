@@ -747,7 +747,15 @@
 	return
 
 /obj/structure/disposalholder/Destroy()
-	qdel(gas)
+	QDEL_NULL(gas)
+	if(contents.len)
+		var/turf/qdelloc = get_turf(src)
+		if(qdelloc)
+			for(var/atom/movable/AM in contents)
+				AM.loc = qdelloc
+		else
+			log_and_message_admins("A disposal holder was deleted with contents in nullspace") //ideally, this should never happen
+
 	active = 0
 	return ..()
 
@@ -1257,7 +1265,7 @@
 /obj/structure/disposalpipe/tagger/New()
 	. = ..()
 	dpdir = dir | turn(dir, 180)
-	if(sort_tag) GLOB.tagger_locations |= sort_tag
+	if(sort_tag) GLOB.tagger_locations |= list("[sort_tag]" = get_z(src))
 	updatename()
 	updatedesc()
 	update()
@@ -1323,7 +1331,7 @@
 
 /obj/structure/disposalpipe/sortjunction/New()
 	. = ..()
-	if(sortType) GLOB.tagger_locations |= sortType
+	if(sortType) GLOB.tagger_locations |= list("[sortType]" = get_z(src))
 
 	updatedir()
 	updatename()
@@ -1638,3 +1646,7 @@
 		dirs = alldirs.Copy()
 
 	src.streak(dirs)
+
+#undef SEND_PRESSURE
+#undef PRESSURE_TANK_VOLUME
+#undef PUMP_MAX_FLOW_RATE

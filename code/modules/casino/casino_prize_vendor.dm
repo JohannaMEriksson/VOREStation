@@ -211,7 +211,7 @@
 /obj/machinery/casino_prize_dispenser/proc/pay_with_chips(var/obj/item/weapon/spacecasinocash/cashmoney, mob/user, var/price)
 	//"cashmoney_:[cashmoney] user:[user] currently_vending:[currently_vending]"
 	if(price > cashmoney.worth)
-		to_chat(usr, "\icon[cashmoney] <span class='warning'>That is not enough chips.</span>")
+		to_chat(usr, "[icon2html(cashmoney, user.client)] <span class='warning'>That is not enough chips.</span>")
 		return 0
 
 	if(istype(cashmoney, /obj/item/weapon/spacecasinocash))
@@ -350,3 +350,5 @@
 /obj/machinery/casino_prize_dispenser/process() //Might not need this, but just to be safe for now
 	if(stat & (BROKEN|NOPOWER))
 		return
+
+#undef CASINO_PRIZE

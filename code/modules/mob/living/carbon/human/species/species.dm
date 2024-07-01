@@ -32,8 +32,8 @@
 	var/tail_animation										// If set, the icon to obtain tail animation states from.
 	var/tail_hair
 
-	var/icon_scale_x = 1										// Makes the icon wider/thinner.
-	var/icon_scale_y = 1										// Makes the icon taller/shorter.
+	var/icon_scale_x = DEFAULT_ICON_SCALE_X										// Makes the icon wider/thinner.
+	var/icon_scale_y = DEFAULT_ICON_SCALE_Y										// Makes the icon taller/shorter.
 
 	var/race_key = 0										// Used for mob icon cache string.
 	var/icon/icon_template									// Used for mob icon generation for non-32x32 species.
@@ -108,7 +108,7 @@
 	var/chem_strength_heal =    1						// Multiplier to most beneficial chem strength
 	var/chem_strength_pain =    1						// Multiplier to painkiller strength (could be used in a negative trait to simulate long-term addiction reducing effects, etc.)
 	var/chem_strength_tox =	    1						// Multiplier to toxic chem strength (inc. chloral/sopo/mindbreaker/etc. thresholds)
-	var/chem_strength_alcohol = 1						// Multiplier to alcohol strength; 0.5 = half, 0 = no effect at all, 2 = double, etc.
+	var/chem_strength_alcohol = 1						// Multiplier to alcohol effect thresholds; higher means more is needed to reach a given effect tier
 
 	var/chemOD_threshold =		1						// Multiplier to overdose threshold; lower = easier overdosing
 	var/chemOD_mod =		1						// Damage modifier for overdose; higher = more damage from ODs
@@ -221,6 +221,8 @@
 
 	var/rarity_value = 1									// Relative rarity/collector value for this species.
 	var/economic_modifier = 2								// How much money this species makes
+
+	var/vore_belly_default_variant = "H"
 
 	// Determines the organs that the species spawns with and
 	var/list/has_organ = list(								// which required-organ checks are conducted.
