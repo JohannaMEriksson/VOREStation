@@ -7597,6 +7597,13 @@
 	},
 /turf/simulated/floor/tiled,
 /area/rnd/outpost/breakroom)
+"rm" = (
+/obj/machinery/power/debug_items/infinite_generator,
+/obj/structure/cable/yellow{
+	icon_state = "0-4"
+	},
+/turf/simulated/floor/virgo3b,
+/area/tether/outpost/solars_outside)
 "zg" = (
 /obj/effect/shuttle_landmark{
 	base_area = /area/mine/explored;
@@ -7624,6 +7631,22 @@
 	},
 /turf/simulated/floor/tiled,
 /area/rnd/outpost)
+"FM" = (
+/obj/structure/cable/heavyduty{
+	icon_state = "0-8"
+	},
+/obj/machinery/power/debug_items/infinite_generator,
+/turf/simulated/floor/virgo3b,
+/area/tether/outpost/solars_outside)
+"Ik" = (
+/obj/structure/cable/heavyduty{
+	icon_state = "1-2"
+	},
+/obj/structure/cable/heavyduty{
+	icon_state = "2-4"
+	},
+/turf/simulated/floor/virgo3b,
+/area/tether/outpost/solars_outside)
 "SO" = (
 /obj/effect/shuttle_landmark{
 	base_area = /area/mine/explored;
@@ -7633,6 +7656,33 @@
 	},
 /turf/simulated/floor/outdoors/grass/sif/virgo3b,
 /area/mine/explored)
+"TQ" = (
+/obj/structure/cable/yellow{
+	icon_state = "2-8"
+	},
+/turf/simulated/floor/virgo3b_indoors,
+/area/tether/outpost/solars_shed)
+"Ug" = (
+/obj/structure/cable/yellow{
+	icon_state = "1-2"
+	},
+/obj/structure/cable/yellow{
+	icon_state = "1-8"
+	},
+/turf/simulated/floor/virgo3b,
+/area/tether/outpost/solars_outside)
+"Us" = (
+/obj/structure/cable/yellow{
+	icon_state = "1-4"
+	},
+/turf/simulated/floor/virgo3b_indoors,
+/area/tether/outpost/solars_shed)
+"ZZ" = (
+/obj/structure/cable/yellow{
+	icon_state = "1-2"
+	},
+/turf/simulated/floor/virgo3b_indoors,
+/area/tether/outpost/solars_shed)
 
 (1,1,1) = {"
 aa
@@ -18183,7 +18233,7 @@ ad
 ad
 az
 aK
-aK
+rm
 aW
 af
 bu
@@ -18325,7 +18375,7 @@ ad
 ax
 aA
 aL
-aL
+Ug
 aX
 bg
 bv
@@ -19317,9 +19367,9 @@ ad
 ad
 ad
 av
-aG
-aG
-aG
+TQ
+ZZ
+Us
 aG
 al
 bv
@@ -19745,7 +19795,7 @@ ad
 ad
 aJ
 aN
-aN
+Ik
 ba
 bc
 bl
@@ -19887,7 +19937,7 @@ ad
 ad
 aK
 aK
-aK
+FM
 aK
 bn
 bl
