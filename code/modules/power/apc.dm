@@ -61,16 +61,16 @@ GLOBAL_LIST_EMPTY(apcs)
 	is_critical = 1
 
 /obj/machinery/power/apc/high
-	cell_type = /obj/item/weapon/cell/infinite
+	cell_type = /obj/item/weapon/cell/high
 
 /obj/machinery/power/apc/super
-	cell_type = /obj/item/weapon/cell/infinite
+	cell_type = /obj/item/weapon/cell/super
 
 /obj/machinery/power/apc/super/critical
 	is_critical = 1
 
 /obj/machinery/power/apc/hyper
-	cell_type = /obj/item/weapon/cell/infinite
+	cell_type = /obj/item/weapon/cell/hyper
 
 /obj/machinery/power/apc/alarms_hidden
 	alarms_hidden = TRUE
@@ -107,7 +107,7 @@ GLOBAL_LIST_EMPTY(apcs)
 	var/obj/item/weapon/cell/cell
 	var/chargelevel = 0.0005  // Cap for how fast APC cells charge, as a percentage-per-tick (0.01 means cellcharge is capped to 1% per second)
 	var/start_charge = 100				// initial cell charge %
-	var/cell_type = /obj/item/weapon/cell/infinite
+	var/cell_type = /obj/item/weapon/cell/apc
 	var/opened = 0 //0=closed, 1=opened, 2=cover removed
 	var/shorted = 0
 	var/grid_check = FALSE
