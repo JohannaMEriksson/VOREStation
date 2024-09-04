@@ -3271,6 +3271,9 @@
 /obj/machinery/camera/network/engineering{
 	dir = 1
 	},
+/obj/structure/cable{
+	icon_state = "1-4"
+	},
 /turf/simulated/floor/tiled/eris/dark/techfloor_grid,
 /area/engineering/storage)
 "gF" = (
@@ -4433,6 +4436,15 @@
 	},
 /turf/simulated/floor/tiled,
 /area/stellardelight/deck2/aftport)
+"ju" = (
+/obj/structure/cable/yellow{
+	icon_state = "4-8"
+	},
+/obj/structure/cable/yellow{
+	icon_state = "1-8"
+	},
+/turf/simulated/floor/airless,
+/area/engineering/engine_room)
 "jv" = (
 /obj/machinery/atmospherics/pipe/simple/hidden/supply{
 	dir = 10
@@ -6520,6 +6532,10 @@
 /area/stellardelight/deck2/starboard)
 "nM" = (
 /obj/machinery/light/small,
+/obj/structure/cable{
+	icon_state = "0-8"
+	},
+/obj/machinery/power/debug_items/infinite_generator,
 /turf/simulated/floor/tiled/eris/dark/techfloor_grid,
 /area/engineering/storage)
 "nN" = (
@@ -9563,6 +9579,13 @@
 	},
 /turf/simulated/floor/airless,
 /area/stellardelight/deck2/exterior)
+"uH" = (
+/obj/structure/cable/yellow{
+	icon_state = "0-2"
+	},
+/obj/machinery/power/debug_items/infinite_generator,
+/turf/simulated/floor/airless,
+/area/engineering/engine_room)
 "uI" = (
 /obj/effect/floor_decal/industrial/warning{
 	dir = 8
@@ -13787,6 +13810,15 @@
 /obj/structure/disposalpipe/segment,
 /turf/simulated/floor/tiled/monotile,
 /area/hydroponics)
+"EB" = (
+/obj/machinery/light/small{
+	dir = 8
+	},
+/obj/structure/cable/yellow{
+	icon_state = "1-2"
+	},
+/turf/simulated/floor/airless,
+/area/engineering/engine_room)
 "EC" = (
 /obj/structure/table/woodentable,
 /obj/item/weapon/paper_bin{
@@ -36835,12 +36867,12 @@ gU
 lu
 nM
 qr
-Vf
-Vf
-Xo
-Vf
-Vf
-EP
+uH
+UF
+EB
+UF
+UF
+ju
 Vf
 Vf
 Xo

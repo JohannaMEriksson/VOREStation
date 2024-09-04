@@ -54,11 +54,33 @@
 	vore_capacity = 1
 	vore_pounce_chance = 20
 	vore_icons = SA_ICON_LIVING | SA_ICON_REST
-	vore_stomach_name = "Grut"
-	vore_stomach_flavor = "You have ended up in the otie's primary stomach. The end of the line for the solidness of the most of its food. It is very hot and humid here, and it doesn't help that the little air left is saturated with pungent fumes of digesting food. The slimy folds of this powerful belly knead and squeeze firmly against your form, the globs and strands of the dark, almost tar-like internal slop within feel rather thick compared to the usual. The muscular walls seem awfully eager to cling and rub against you, while oozing numbingly thick and dense juices against your body."
-	vore_default_contamination_flavor = "Acrid"
-	vore_default_contamination_color = "black"
-	vore_default_item_mode = IM_DIGEST
+//	vore_stomach_name = "Grut"
+//	vore_stomach_flavor = "You have ended up in the otie's primary stomach. The end of the line for the solidness of the most of its food. It is very hot and humid here, and it doesn't help that the little air left is saturated with pungent fumes of digesting food. The slimy folds of this powerful belly knead and squeeze firmly against your form, the globs and strands of the dark, almost tar-like internal slop within feel rather thick compared to the usual. The muscular walls seem awfully eager to cling and rub against you, while oozing numbingly thick and dense juices against your body."
+//	vore_default_contaminates = TRUE
+//	vore_default_contamination_flavor = "Acrid"
+//	vore_default_contamination_color = "black"
+//	vore_default_item_mode = IM_DIGEST
+
+/mob/living/simple_mob/vore/otie/init_vore()
+	..()
+	var/obj/belly/B = vore_selected
+	B.name = "grut"
+	B.desc = "You have ended up in the otie's primary stomach. The end of the line for the solidness of the most of its food. It is very hot and humid here, and it doesn't help that the little air left is saturated with pungent fumes of digesting food. The slimy folds of this powerful belly knead and squeeze firmly against your form, the globs and strands of the dark, almost tar-like internal slop within feel rather thick compared to the usual. The muscular walls seem awfully eager to cling and rub against you, while oozing numbingly thick and dense juices against your body."
+	B.digest_brute = 3
+	B.digest_burn = 2
+	B.digest_oxy = 1
+	B.item_digest_mode = IM_DIGEST
+	B.contaminates = TRUE
+	B.contamination_flavor = "Acrid"
+	B.contamination_color = "black"
+
+	// B.emote_lists[DM_DIGEST] = list(
+	// 	"The big feline rumbles heartily, incredibly satisfied as it works to digest its newfound, stomach-filling catch!",
+	// 	"The surrounding stomach walls suddenly tighten inwards, smothering you in slimy, kneading flesh for a time until they finally relax back again!",
+	// 	"The purring of the content kitty is practically deafening within its churning depths, gently vibrating its gut flesh around you!",
+	// 	"The massive feline's gut sways from side to side as it prowls around, steadily coating you in hot digestive juices until you're practically soaked!",
+	// 	"You can hear the muffled sounds of the panther lickings its chops, savoring the remnants of your taste!",
+	// 	"The near-constant cacophony of digestive noises intensifies for a while, overwhelming your senses before finally calming down somewhat!")
 
 /mob/living/simple_mob/vore/otie/feral //gets the pet2tame feature. starts out hostile tho so get gamblin'
 	name = "mutated feral otie"
