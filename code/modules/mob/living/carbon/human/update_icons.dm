@@ -1356,7 +1356,7 @@ var/global/list/damage_icon_parts = list() //see UpdateDamageIcon()
 		if(tail_style.extra_overlay)
 			var/icon/overlay = new/icon("icon" = (tail_style?.can_loaf && resting) ? tail_style.icon_loaf : tail_style.icon, "icon_state" = tail_style.extra_overlay) //CHOMPEdit
 			if(wagging && tail_style.ani_state)
-				overlay = new/icon("icon" = tail_style.icon, "icon_state" = tail_style.extra_overlay_w)
+				overlay = new/icon("icon" = (tail_style?.can_loaf && resting) ? tail_style.icon_loaf : tail_style.icon, "icon_state" = tail_style.extra_overlay_w)	//RS EDIT
 				overlay.Blend(rgb(src.r_tail2, src.g_tail2, src.b_tail2), tail_style.color_blend_mode)
 				tail_s.Blend(overlay, ICON_OVERLAY)
 				qdel(overlay)
@@ -1368,7 +1368,7 @@ var/global/list/damage_icon_parts = list() //see UpdateDamageIcon()
 		if(tail_style.extra_overlay2)
 			var/icon/overlay = new/icon("icon" = (tail_style?.can_loaf && resting) ? tail_style.icon_loaf : tail_style.icon, "icon_state" = tail_style.extra_overlay2) //CHOMPEdit
 			if(wagging && tail_style.ani_state)
-				overlay = new/icon("icon" = tail_style.icon, "icon_state" = tail_style.extra_overlay2_w)
+				overlay = new/icon("icon" = (tail_style?.can_loaf && resting) ? tail_style.icon_loaf : tail_style.icon, "icon_state" = tail_style.extra_overlay2_w)	//RS EDIT
 				overlay.Blend(rgb(src.r_tail3, src.g_tail3, src.b_tail3), tail_style.color_blend_mode)
 				tail_s.Blend(overlay, ICON_OVERLAY)
 				qdel(overlay)
@@ -1417,6 +1417,7 @@ var/global/list/damage_icon_parts = list() //see UpdateDamageIcon()
 		vore_belly_image.layer = BODY_LAYER+VORE_BELLY_LAYER
 		overlays_standing[VORE_BELLY_LAYER] = vore_belly_image
 		vore_belly_image.plane = PLANE_CH_STOMACH //This one line of code. This ONE LINE OF CODE TOOK 6 HOURS TO FIGURE OUT. THANK YOU REDCAT.
+		vore_belly_image.appearance_flags = appearance_flags
 
 	apply_layer(VORE_BELLY_LAYER)
 
@@ -1449,6 +1450,7 @@ var/global/list/damage_icon_parts = list() //see UpdateDamageIcon()
 		vore_tail_image.layer = BODY_LAYER+VORE_TAIL_LAYER
 		overlays_standing[VORE_TAIL_LAYER] = vore_tail_image
 		vore_tail_image.plane = PLANE_CH_STOMACH //This one line of code. This ONE LINE OF CODE TOOK 6 HOURS TO FIGURE OUT. THANK YOU REDCAT.
+		vore_tail_image.appearance_flags = appearance_flags
 
 	apply_layer(VORE_TAIL_LAYER)
 

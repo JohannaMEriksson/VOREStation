@@ -279,7 +279,8 @@ var/global/list/valid_bloodreagents = list("default","iron","copper","phoron","s
 
 	for(var/T in pref.pos_traits + pref.neg_traits)
 		points_left -= traits_costs[T]
-		traits_left--
+		if(T in pref.pos_traits)
+			traits_left--
 	. += "<b>Traits Left:</b> [traits_left]<br>"
 	. += "<b>Points Left:</b> [points_left]<br>"
 	if(points_left < 0 || traits_left < 0 || (!pref.custom_species && pref.species == SPECIES_CUSTOM))
@@ -568,7 +569,7 @@ var/global/list/valid_bloodreagents = list("default","iron","copper","phoron","s
 			if(trait_choice in nicelist)
 				var/datum/trait/path = nicelist[trait_choice]
 				var/choice = tgui_alert(usr, "\[Cost:[initial(path.cost)]\] [initial(path.desc)]",initial(path.name), list("Take Trait","Go Back"))
-				if(choice != "Go Back")
+				if(choice == "Take Trait")
 					done = TRUE
 
 		if(!trait_choice)
