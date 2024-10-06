@@ -2046,6 +2046,15 @@
 /obj/machinery/atmospherics/pipe/simple/hidden/supply,
 /turf/simulated/floor/tiled/dark,
 /area/groundbase/science/outpost/anomaly_lab)
+"sb" = (
+/obj/structure/cable/heavyduty{
+	icon_state = "0-2"
+	},
+/obj/machinery/power/debug_items/infinite_generator,
+/turf/simulated/floor{
+	edge_blending_priority = -1
+	},
+/area/submap/groundbase/wilderness/west)
 "sd" = (
 /obj/machinery/computer/area_atmos/tag{
 	dir = 4;
@@ -3482,6 +3491,9 @@
 /obj/structure/railing,
 /obj/structure/cable/heavyduty{
 	icon_state = "4-8"
+	},
+/obj/structure/cable/heavyduty{
+	icon_state = "1-4"
 	},
 /turf/simulated/floor{
 	edge_blending_priority = -1
@@ -23359,7 +23371,7 @@ RY
 Tg
 RY
 RY
-iL
+sb
 Dk
 iL
 iL
