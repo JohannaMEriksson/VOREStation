@@ -29,7 +29,8 @@
 			else
 				icon = 'icons/obj/props/items.dmi'
 			icon_state = icon_state_on
-			src.visible_message("<span class='notice'>[text_activated]</span>")
+			if(user)
+				user.visible_message(span_notice("[text_activated]"))
 			update_icon()
 			if(effect == 1)
 				var/datum/effect/effect/system/spark_spread/s = new /datum/effect/effect/system/spark_spread
@@ -70,7 +71,7 @@
 					O.Weaken(flash_time)
 			if(effect == 4)
 				var/atom/o = new object(get_turf(user))
-				src.visible_message("<span class='notice'>[src] has produced [o]!</span>")
+				src.visible_message(span_notice("[src] has produced [o]!"))
 			if(sound_activated)
 				playsound(src, sound_activated, 50, 1)
 		else if(togglable)
@@ -83,7 +84,8 @@
 				icon = icon_off
 			else
 				icon = 'icons/obj/props/items.dmi'
-			src.visible_message("<span class='notice'>[text_deactivated]</span>")
+			if(user)
+				user.visible_message(span_notice("[text_deactivated]"))
 			update_icon()
 	return ..()
 
