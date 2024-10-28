@@ -90,7 +90,7 @@
 					return
 	// Added voice muffling for Issue 41.
 	if(stat == UNCONSCIOUS || sleeping > 0)
-		to_chat(src, span_filter_notice("<I>... You can almost hear someone talking ...</I>"))
+		to_chat(src, span_filter_notice(span_italics("... You can almost hear someone talking ...")))
 	else
 		if(client && client.prefs.chat_timestamp)
 			// TG-Chat filters latch directly to the spans, we no longer need that
@@ -339,7 +339,7 @@
 		if(length(msg) <= 40)
 			return span_notice("[msg]")
 		else
-			return "<span class='notice'>[copytext_preserve_html(msg, 1, 37)]... <a href='byond://?src=\ref[src];flavor_more=1'>More...</span></a>"
+			return span_notice("[copytext_preserve_html(msg, 1, 37)]... <a href='byond://?src=\ref[src];flavor_more=1'>More...</a>")
 
 /*
 /mob/verb/help()
@@ -354,9 +354,9 @@
 	// Special cases, can never respawn
 	if(ticker?.mode?.deny_respawn)
 		time = -1
-	else if(!config.abandon_allowed)
+	else if(!CONFIG_GET(flag/abandon_allowed))
 		time = -1
-	else if(!config.respawn)
+	else if(!CONFIG_GET(flag/respawn))
 		time = -1
 
 	// Special case for observing before game start
@@ -365,7 +365,7 @@
 
 	// Wasn't given a time, use the config time
 	else if(!time)
-		time = config.respawn_time
+		time = CONFIG_GET(number/respawn_time)
 
 	var/keytouse = ckey
 	// Try harder to find a key to use
@@ -377,7 +377,7 @@
 	GLOB.respawn_timers[keytouse] = world.time + time
 
 /mob/observer/dead/set_respawn_timer()
-	if(config.antag_hud_restricted && has_enabled_antagHUD)
+	if(CONFIG_GET(flag/antag_hud_restricted) && has_enabled_antagHUD)
 		..(-1)
 	else
 		return // Don't set it, no need
@@ -387,7 +387,7 @@
 	set category = "OOC"
 
 	if(stat != DEAD || !ticker)
-		to_chat(usr, span_notice("<B>You must be dead to use this!</B>"))
+		to_chat(usr, span_boldnotice("You must be dead to use this!"))
 		return
 
 	// Final chance to abort "respawning"
@@ -534,8 +534,7 @@
 		onclose(usr, "[name]")
 	if(href_list["flavor_change"])
 		update_flavor_text()
-//	..()
-	return
+	return ..()
 
 
 /mob/proc/pull_damage()
@@ -634,7 +633,7 @@
 		playsound(src.loc, 'sound/weapons/thudswoosh.ogg', 25) //Quieter than hugging/grabbing but we still want some audio feedback
 
 		if(H.pull_damage())
-			to_chat(src, span_filter_notice("[span_red("<B>Pulling \the [H] in their current condition would probably be a bad idea.</B>")]"))
+			to_chat(src, span_filter_notice("[span_red(span_bold("Pulling \the [H] in their current condition would probably be a bad idea."))]"))
 
 	//Attempted fix for people flying away through space when cuffed and dragged.
 	if(ismob(AM))
@@ -936,9 +935,9 @@
 		return
 
 	if(self)
-		visible_message(span_warning("<b>[src] rips [selection] out of their body.</b>"),span_warning("<b>You rip [selection] out of your body.</b>"))
+		visible_message(span_boldwarning("[src] rips [selection] out of their body."),span_boldwarning("You rip [selection] out of your body."))
 	else
-		visible_message(span_warning("<b>[usr] rips [selection] out of [src]'s body.</b>"),span_warning("<b>[usr] rips [selection] out of your body.</b>"))
+		visible_message(span_boldwarning("[usr] rips [selection] out of [src]'s body."),span_boldwarning("[usr] rips [selection] out of your body."))
 	valid_objects = get_visible_implants(0)
 	if(valid_objects.len == 1) //Yanking out last object - removing verb.
 		remove_verb(src, /mob/proc/yank_out_object)

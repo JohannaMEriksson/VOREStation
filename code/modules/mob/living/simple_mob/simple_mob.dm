@@ -198,7 +198,7 @@
 	if(organ_names)
 		organ_names = GET_DECL(organ_names)
 
-	if(config.allow_simple_mob_recolor)
+	if(CONFIG_GET(flag/allow_simple_mob_recolor))
 		add_verb(src, /mob/living/simple_mob/proc/ColorMate)
 
 
@@ -224,7 +224,7 @@
 //Client attached
 /mob/living/simple_mob/Login()
 	. = ..()
-	to_chat(src,"<b>You are \the [src].</b> [player_msg]")
+	to_chat(src,span_boldnotice("You are \the [src].") + " [player_msg]")
 	if(hasthermals)
 		add_verb(src, /mob/living/simple_mob/proc/hunting_vision) //So that maint preds can see prey through walls, to make it easier to find them.
 
@@ -282,7 +282,7 @@
 		. += injury_level
 	// VOREStation Edit Stop
 
-	. += config.animal_delay
+	. += CONFIG_GET(number/animal_delay)
 
 	. += ..()
 
@@ -313,7 +313,7 @@
 	return mob_class & MOB_CLASS_HUMANOID|MOB_CLASS_ANIMAL|MOB_CLASS_SLIME // Update this if needed.
 
 /mob/living/simple_mob/get_nametag_desc(mob/user)
-	return "<i>[tt_desc]</i>"
+	return span_italics("[tt_desc]")
 
 /mob/living/simple_mob/make_hud_overlays()
 	hud_list[STATUS_HUD]  = gen_hud_image(buildmode_hud, src, "ai_0", plane = PLANE_BUILDMODE)
