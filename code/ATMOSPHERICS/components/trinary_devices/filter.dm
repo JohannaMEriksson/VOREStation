@@ -44,15 +44,15 @@
 
 	switch(filter_type)
 		if(0) //removing hydrocarbons
-			filtered_out = list("phoron")
+			filtered_out = list(GAS_PHORON)
 		if(1) //removing O2
-			filtered_out = list("oxygen")
+			filtered_out = list(GAS_O2)
 		if(2) //removing N2
-			filtered_out = list("nitrogen")
+			filtered_out = list(GAS_N2)
 		if(3) //removing CO2
-			filtered_out = list("carbon_dioxide")
+			filtered_out = list(GAS_CO2)
 		if(4)//removing N2O
-			filtered_out = list("nitrous_oxide")
+			filtered_out = list(GAS_N2O)
 
 	air1.volume = ATMOS_DEFAULT_VOLUME_FILTER
 	air2.volume = ATMOS_DEFAULT_VOLUME_FILTER
@@ -182,7 +182,7 @@
 
 	return data
 
-/obj/machinery/atmospherics/trinary/atmos_filter/tgui_act(action, params)
+/obj/machinery/atmospherics/trinary/atmos_filter/tgui_act(action, params, datum/tgui/ui)
 	if(..())
 		return TRUE
 
@@ -205,18 +205,18 @@
 			filtered_out.Cut()	//no need to create new lists unnecessarily
 			switch(filter_type)
 				if(0) //removing hydrocarbons
-					filtered_out += "phoron"
+					filtered_out += GAS_PHORON
 					filtered_out += "oxygen_agent_b"
 				if(1) //removing O2
-					filtered_out += "oxygen"
+					filtered_out += GAS_O2
 				if(2) //removing N2
-					filtered_out += "nitrogen"
+					filtered_out += GAS_N2
 				if(3) //removing CO2
-					filtered_out += "carbon_dioxide"
+					filtered_out += GAS_CO2
 				if(4)//removing N2O
-					filtered_out += "nitrous_oxide"
+					filtered_out += GAS_N2O
 
-	add_fingerprint(usr)
+	add_fingerprint(ui.user)
 	update_icon()
 
 //

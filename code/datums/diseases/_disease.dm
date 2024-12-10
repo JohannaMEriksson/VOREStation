@@ -91,7 +91,7 @@ GLOBAL_LIST_INIT(diseases, subtypesof(/datum/disease))
 
 	var/cures_found = 0
 	for(var/C_id in cures)
-		if(affected_mob.reagents.has_reagent(C_id))
+		if(affected_mob.bloodstr.has_reagent(C_id) || affected_mob.ingested.has_reagent(C_id))
 			cures_found++
 
 	if(needs_all_cures && cures_found < length(cures))
@@ -106,7 +106,7 @@ GLOBAL_LIST_INIT(diseases, subtypesof(/datum/disease))
 	if((spread_flags & SPECIAL || spread_flags & NON_CONTAGIOUS || spread_flags & BLOOD) && !force_spread)
 		return
 
-	if(affected_mob.reagents.has_reagent("spaceacilin") || (affected_mob.nutrition > 300 && prob(affected_mob.nutrition/10)))
+	if(affected_mob.bloodstr.has_reagent(REAGENT_ID_SPACEACILLIN) || (affected_mob.nutrition > 300 && prob(affected_mob.nutrition/50)))
 		return
 
 	var/spread_range = 1
@@ -119,7 +119,7 @@ GLOBAL_LIST_INIT(diseases, subtypesof(/datum/disease))
 
 	var/turf/target = affected_mob.loc
 	if(istype(target))
-		for(var/mob/living/carbon/C in oview(spread_range, affected_mob))
+		for(var/mob/living/carbon/human/C in oview(spread_range, affected_mob))
 			var/turf/current = get_turf(C)
 			if(current)
 				while(TRUE)
@@ -128,6 +128,8 @@ GLOBAL_LIST_INIT(diseases, subtypesof(/datum/disease))
 						break
 					var/direction = get_dir(current, target)
 					var/turf/next = get_step(current, direction)
+					if(!current.CanZASPass() || !next.CanZASPass(get_turf(turn(direction, 100))))
+						break
 					current = next
 
 /datum/disease/proc/cure()
@@ -153,8 +155,13 @@ GLOBAL_LIST_INIT(diseases, subtypesof(/datum/disease))
 
 /datum/disease/proc/IsSpreadByTouch()
 	if(spread_flags & CONTACT_FEET || spread_flags & CONTACT_HANDS || spread_flags & CONTACT_GENERAL)
-		return 1
-	return 0
+		return TRUE
+	return FALSE
+
+/datum/disease/proc/IsSpreadByAir()
+	if(spread_flags & AIRBORNE)
+		return TRUE
+	return FALSE
 
 /datum/disease/proc/remove_virus()
 	affected_mob.viruses -= src
