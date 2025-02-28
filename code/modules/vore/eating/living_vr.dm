@@ -175,7 +175,7 @@
 	else if(istype(I,/obj/item/radio/beacon))
 		var/confirm = tgui_alert(user, "[src == user ? "Eat the beacon?" : "Feed the beacon to [src]?"]", "Confirmation", list("Yes!", "Cancel"))
 		if(confirm == "Yes!")
-			var/obj/belly/B = tgui_input_list(usr, "Which belly?", "Select A Belly", vore_organs)
+			var/obj/belly/B = tgui_input_list(user, "Which belly?", "Select A Belly", vore_organs)
 			if(!istype(B))
 				return TRUE
 			visible_message(span_warning("[user] is trying to stuff a beacon into [src]'s [lowertext(B.name)]!"),
@@ -396,14 +396,14 @@
 		return
 
 	load_character(slotnum)
-	attempt_vr(user.client?.prefs_vr,"load_vore","") //VOREStation Edit
+	attempt_vr(user.client?.prefs_vr,"load_vore","")
 	sanitize_preferences()
 
 	return remember_default
 
 /datum/preferences/proc/return_to_character_slot(mob/user, var/remembered_default)
 	load_character(remembered_default)
-	attempt_vr(user.client?.prefs_vr,"load_vore","") //VOREStation Edit
+	attempt_vr(user.client?.prefs_vr,"load_vore","")
 	sanitize_preferences()
 
 //
@@ -640,17 +640,17 @@
 /mob/living/proc/eat_held_mob(mob/living/user, mob/living/prey, mob/living/pred)
 	var/belly
 	if(user != pred)
-		belly = tgui_input_list(usr, "Choose Belly", "Belly Choice", pred.vore_organs)
+		belly = tgui_input_list(user, "Choose Belly", "Belly Choice", pred.vore_organs)
 	else
 		belly = pred.vore_selected
 	return perform_the_nom(user, prey, pred, belly)
 
 /mob/living/proc/feed_self_to_grabbed(mob/living/user, mob/living/pred)
-	var/belly = tgui_input_list(usr, "Choose Belly", "Belly Choice", pred.vore_organs)
+	var/belly = tgui_input_list(user, "Choose Belly", "Belly Choice", pred.vore_organs)
 	return perform_the_nom(user, user, pred, belly)
 
 /mob/living/proc/feed_grabbed_to_other(mob/living/user, mob/living/prey, mob/living/pred)
-	var/belly = tgui_input_list(usr, "Choose Belly", "Belly Choice", pred.vore_organs)
+	var/belly = tgui_input_list(user, "Choose Belly", "Belly Choice", pred.vore_organs)
 	return perform_the_nom(user, prey, pred, belly)
 
 //
@@ -850,7 +850,7 @@
 
 	//Again, no real need for a check on this. I'm unsure how it could be somehow abused.
 	//Even if they open the box 900 times, who cares, they get the wrong color and do it again.
-	var/new_color = input(src,"Select a new color","Body Glow",glow_color) as color
+	var/new_color = tgui_color_picker(src,"Select a new color","Body Glow",glow_color)
 	if(new_color)
 		glow_color = new_color
 
@@ -877,132 +877,14 @@
 		to_chat(src, span_notice("You are not holding anything."))
 		return
 
-	if(is_type_in_list(I,item_vore_blacklist) && !adminbus_trash) //If someone has adminbus, they can eat whatever they want.
-		to_chat(src, span_warning("You are not allowed to eat this."))
-		return
-
-	if(!I.trash_eatable) //OOC pref. This /IS/ respected, even if adminbus_trash is enabled
-		to_chat(src, span_warning("You can't eat that so casually!"))
-		return
-
-	if(istype(I, /obj/item/paicard))
-		var/obj/item/paicard/palcard = I
-		var/mob/living/silicon/pai/pocketpal = palcard.pai
-		if(pocketpal && (!pocketpal.devourable))
-			to_chat(src, span_warning("\The [pocketpal] doesn't allow you to eat it."))
-			return
-
-	if(istype(I, /obj/item/book))
-		var/obj/item/book/book = I
-		if(book.carved)
-			to_chat(src, span_warning("\The [book] is not worth eating without the filling."))
-			return
-
 	if(is_type_in_list(I,edible_trash) | adminbus_trash)
-		if(I.hidden_uplink)
-			to_chat(src, span_warning("You really should not be eating this."))
-			message_admins("[key_name(src)] has attempted to ingest an uplink item. ([src ? ADMIN_JMP(src) : "null"])")
+		if(!I.on_trash_eaten(src)) // shows object's rejection message itself
 			return
-		if(istype(I,/obj/item/pda))
-			var/obj/item/pda/P = I
-			if(P.owner)
-				var/watching = FALSE
-				for(var/mob/living/carbon/human/H in view(src))
-					if(H.real_name == P.owner && H.client)
-						watching = TRUE
-						break
-				if(!watching)
-					return
-				else
-					visible_message(span_warning("[src] is threatening to make [P] disappear!"))
-					if(P.id)
-						var/confirm = tgui_alert(src, "The PDA you're holding contains a vulnerable ID card. Will you risk it?", "Confirmation", list("Definitely", "Cancel"))
-						if(confirm != "Definitely")
-							return
-					if(!do_after(src, 100, P))
-						return
-					visible_message(span_warning("[src] successfully makes [P] disappear!"))
-			to_chat(src, span_notice("You can taste the sweet flavor of delicious technology."))
-			drop_item()
-			I.forceMove(vore_selected)
-			updateVRPanel()
-			return
-		if(istype(I,/obj/item/clothing/shoes))
-			var/obj/item/clothing/shoes/S = I
-			if(S.holding)
-				to_chat(src, span_warning("There's something inside!"))
-				return
-		if(iscapturecrystal(I))
-			var/obj/item/capture_crystal/C = I
-			if(!C.bound_mob.devourable)
-				to_chat(src, span_warning("That doesn't seem like a good idea. (\The [C.bound_mob]'s prefs don't allow it.)"))
-				return
 		drop_item()
 		I.forceMove(vore_selected)
 		updateVRPanel()
-
 		log_admin("VORE: [src] used Eat Trash to swallow [I].")
-
-		if(istype(I,/obj/item/flashlight/flare) || istype(I,/obj/item/flame/match) || istype(I,/obj/item/storage/box/matches))
-			to_chat(src, span_notice("You can taste the flavor of spicy cardboard."))
-		else if(istype(I,/obj/item/flashlight/glowstick))
-			to_chat(src, span_notice("You found out the glowy juice only tastes like regret."))
-		else if(istype(I,/obj/item/trash/cigbutt))
-			to_chat(src, span_notice("You can taste the flavor of bitter ash. Classy."))
-		else if(istype(I,/obj/item/clothing/mask/smokable))
-			var/obj/item/clothing/mask/smokable/C = I
-			if(C.lit)
-				to_chat(src, span_notice("You can taste the flavor of burning ash. Spicy!"))
-			else
-				to_chat(src, span_notice("You can taste the flavor of aromatic rolling paper and funny looks."))
-		else if(istype(I,/obj/item/paper))
-			to_chat(src, span_notice("You can taste the dry flavor of bureaucracy."))
-		else if(istype(I,/obj/item/book))
-			to_chat(src, span_notice("You can taste the dry flavor of knowledge."))
-		else if(istype(I,/obj/item/dice) || istype(I,/obj/item/roulette_ball))
-			to_chat(src, span_notice("You can taste the bitter flavor of cheating."))
-		else if(istype(I,/obj/item/lipstick))
-			to_chat(src, span_notice("You can taste the flavor of couture and style. Toddler at the make-up bag style."))
-		else if(istype(I,/obj/item/soap))
-			to_chat(src, span_notice("You can taste the bitter flavor of verbal purification."))
-		else if(istype(I,/obj/item/spacecash) || istype(I,/obj/item/storage/wallet))
-			to_chat(src, span_notice("You can taste the flavor of wealth and reckless waste."))
-		else if(istype(I,/obj/item/broken_bottle) || istype(I,/obj/item/material/shard))
-			to_chat(src, span_notice("You can taste the flavor of pain. This can't possibly be healthy for your guts."))
-		else if(istype(I,/obj/item/light))
-			var/obj/item/light/L = I
-			if(L.status == LIGHT_BROKEN)
-				to_chat(src, span_notice("You can taste the flavor of pain. This can't possibly be healthy for your guts."))
-			else
-				to_chat(src, span_notice("You can taste the flavor of really bad ideas."))
-		else if(istype(I,/obj/item/bikehorn/tinytether))
-			to_chat(src, span_notice("You feel a rush of power swallowing such a large, err, tiny structure."))
-		else if(istype(I,/obj/item/mmi/digital/posibrain) || istype(I,/obj/item/aicard))
-			to_chat(src, span_notice("You can taste the sweet flavor of digital friendship. Or maybe it is something else."))
-		else if(istype(I,/obj/item/paicard))
-			to_chat(src, span_notice("You can taste the sweet flavor of digital friendship."))
-			var/obj/item/paicard/ourcard = I
-			if(ourcard.pai && ourcard.pai.client && isbelly(ourcard.loc))
-				var/obj/belly/B = ourcard.loc
-				to_chat(ourcard.pai, span_boldnotice("[B.desc]"))
-		else if(istype(I,/obj/item/reagent_containers/food))
-			var/obj/item/reagent_containers/food/F = I
-			if(!F.reagents.total_volume)
-				to_chat(src, span_notice("You can taste the flavor of garbage and leftovers. Delicious?"))
-			else
-				to_chat(src, span_notice("You can taste the flavor of gluttonous waste of food."))
-		else if (istype(I,/obj/item/clothing/accessory/collar))
-			to_chat(src, span_notice("You can taste the submissiveness in the wearer of [I]!"))
-		else if(iscapturecrystal(I))
-			var/obj/item/capture_crystal/C = I
-			if(C.bound_mob && (C.bound_mob in C.contents))
-				if(isbelly(C.loc))
-					var/obj/belly/B = C.loc
-					to_chat(C.bound_mob, span_notice("Outside of your crystal, you can see; " + span_notice("[B.desc]")))
-					to_chat(src, span_notice("You can taste the the power of command."))
-		else
-			to_chat(src, span_notice("You can taste the flavor of garbage. Delicious."))
-		visible_message(span_warning("[src] demonstrates their voracious capabilities by swallowing [I] whole!"))
+		I.after_trash_eaten(src)
 		return
 	to_chat(src, span_notice("This item is not appropriate for ethical consumption."))
 	return
@@ -1179,21 +1061,27 @@
 	if(href_list["vore_prefs"])
 		display_voreprefs(usr)
 	if(href_list["ooc_notes"])
-		src.Examine_OOC()
+		do_examine_ooc(usr)
 	if(href_list["edit_ooc_notes"])
 		if(usr == src)
-			set_metainfo_panel()
+			set_metainfo_panel(usr)
 	if(href_list["edit_ooc_note_likes"])
 		if(usr == src)
-			set_metainfo_likes()
+			set_metainfo_likes(usr)
 	if(href_list["edit_ooc_note_dislikes"])
 		if(usr == src)
-			set_metainfo_dislikes()
+			set_metainfo_dislikes(usr)
 	if(href_list["save_ooc_panel"])
 		if(usr == src)
-			save_ooc_panel()
+			save_ooc_panel(usr)
 	if(href_list["print_ooc_notes_to_chat"])
-		print_ooc_notes_to_chat()
+		print_ooc_notes_to_chat(usr)
+	if(href_list["save_private_notes"])
+		if(usr == src)
+			save_private_notes(usr)
+	if(href_list["edit_private_notes"])
+		if(usr == src)
+			set_metainfo_private_notes(usr)
 	return ..()
 
 /mob/living/proc/display_voreprefs(mob/user)	//Called by Topic() calls on instances of /mob/living (and subtypes) containing vore_prefs as an argument
@@ -1254,12 +1142,12 @@
 	if(result == "Open Panel")
 		var/mob/living/user = usr
 		if(!user)
-			to_chat(usr,span_notice("Mob undefined: [user]"))
+			to_chat(user,span_notice("Mob undefined: [user]"))
 			return FALSE
 
 		var/datum/vore_look/export_panel/exportPanel
 		if(!exportPanel)
-			exportPanel = new(usr)
+			exportPanel = new(user)
 
 		if(!exportPanel)
 			to_chat(user,span_notice("Export panel undefined: [exportPanel]"))

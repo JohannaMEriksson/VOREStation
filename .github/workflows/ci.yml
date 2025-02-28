@@ -11,7 +11,7 @@ jobs:
 
   run_linters:
     name: Run Linters
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
 
   dreamchecker:
     name: DreamChecker
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -94,6 +94,22 @@ jobs:
         with:
           outputFile: output-annotations.txt
 
+  odlint:
+    name: Lint with OpenDream
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9
+      - uses: actions/checkout@v4
+      - uses: robinraju/release-downloader@v1.9
+        with:
+          repository: "OpenDreamProject/OpenDream"
+          tag: "latest"
+          fileName: "DMCompiler_linux-x64.tar.gz"
+          extract: true
+      - run: ./DMCompiler_linux-x64/DMCompiler --suppress-unimplemented vorestation.dme
+
   unit_tests:
     strategy:
       matrix:
@@ -101,7 +117,7 @@ jobs:
     # name: Integration Tests (${{ matrix.map }})
     name: Integration Tests
     # needs: ['run_linters', 'dreamchecker']
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Ensure +x on CI directory
@@ -130,7 +146,7 @@ jobs:
 
   extra_map_tests:
     name: Map Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Ensure +x on CI directory
@@ -157,7 +173,7 @@ jobs:
   tests_successful:
     name: Integration Tests
     needs: ['run_linters', 'dreamchecker', 'unit_tests', 'extra_map_tests']
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Report Success
         run: |

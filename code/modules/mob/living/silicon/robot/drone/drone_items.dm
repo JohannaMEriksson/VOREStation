@@ -547,7 +547,7 @@
 			if(wood)
 				wood.add_charge(4000)
 		else if(istype(W,/obj/item/pipe))
-			// This allows drones and engiborgs to clear pipe assemblies from floors.
+			pass() // This allows drones and engiborgs to clear pipe assemblies from floors.
 		else
 			continue
 
@@ -621,4 +621,4 @@
 
 // 	dat += resources
 
-// 	src << browse(dat, "window=robotmod")
+// 	src << browse("<html>[dat]</html>", "window=robotmod")
